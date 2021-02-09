@@ -7,6 +7,7 @@ Technically the hardware `div` instruction divides a 128-bit numerator by a 64-b
 Because a lot of the work is precomputable for a given denominator/divisor, a class is also provided allowing you to perform this precomputation, then repeatedly divide different numerators by that same denominator.
 
 Theory:
+
 First, `floor(2^64/D)` is computed with extreme care to efficiency. The first correct result bit is obtained via leading bit counts, the second via shifts, then subsequently the correct bit count is doubled by each of 5 Newton-Raphson iterations to obtain 64 correct bits. Careful construction avoids excessive shifts, branching, or the need to track more than 64 bits at a time during this process.
 
 Then, a multiply-high of this value with any desired numerator produces either the correct answer, or 1 below. This condition is checked and fixed, and the result is returned.
