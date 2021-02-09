@@ -59,10 +59,9 @@ private:
     add %[D], %[E]             \n\
     mov %[E], %[A]             \n\
     imul %[C], %[E]            \n\
-    neg %[C]                   \n\
-    cmp %[C], %[E]             \n\
-    sbb $-1, %[A]              \n\
-    adc $-1, %[A]"
+    add %[C], %[E]             \n\
+    adc $0, %[A]               \n\
+    sbb $0, %[A]"
             : [C] "+&c" (D), [A] "=&a" (A), [D] "=&d" (E), [E] "=&r" (F)
             :
             : "cc"
@@ -83,10 +82,9 @@ private:
         C += __umulh(C, C * D);
         C += __umulh(C, C * D);
         F = C * D;
-        D = (uint64_t)-(int64_t)D;
-        unsigned char carry = _subborrow_u64(0, F, D, &F);
-        carry = _subborrow_u64(carry, C, ~0ULL, &C);
-        _addcarry_u64(carry, C, ~0ULL, &C);
+        unsigned char carry = _addcarry_u64(0, F, D, &F);
+        carry = _addcarry_u64(carry, C, 0, &C);
+        _subborrow_u64(carry, C, 0, &C);
         return C;
 #else
 #error UNSUPPORTED
@@ -167,17 +165,16 @@ static inline uint64_t FastDivide(uint64_t N, uint64_t D)
     mul %[F]                   \n\
     add %[D], %[F]             \n\
     mov %[F], %[A]             \n\
-    imul %[E], %[F]            \n\
-    neg %[E]                   \n\
-    cmp %[E], %[F]             \n\
-    sbb $-1, %[A]              \n\
-    adc $-1, %[A]              \n\
     mul %[N]                   \n\
     mov %[D], %[A]             \n\
     imul %[E], %[D]            \n\
-    sub %[D], %[N]             \n\
-    cmp %[E], %[N]             \n\
-    sbb $-1, %[A]"
+    add %[D], %[N]             \n\
+    mov %[N], %[D]             \n\
+    add %[E], %[N]             \n\
+    cmovnc %[D], %[N]          \n\
+    adc $0, %[A]               \n\
+    add %[E], %[N]             \n\
+    adc $0, %[A]"
         : [N] "+&c" (N), [D] "+&d" (D), [A] "=&a" (A), [E] "=&r" (E), [F] "=&r" (F)
         :
         : "cc"
@@ -197,14 +194,16 @@ static inline uint64_t FastDivide(uint64_t N, uint64_t D)
     C += __umulh(C, C * D);
     C += __umulh(C, C * D);
     C += __umulh(C, C * D);
-    F = C * D;
-    D = (uint64_t)-(int64_t)D;
-    unsigned char carry = _subborrow_u64(0, F, D, &F);
-    carry = _subborrow_u64(carry, C, ~0ULL, &C);
-    _addcarry_u64(carry, C, ~0ULL, &C);
     C = __umulh(C, N);
-    carry = _subborrow_u64(0, N - C * D, D, &N);
-    _subborrow_u64(carry, C, ~0ULL, &C);
+    N += C * D;
+    E = N;
+    // super dumb codegen, leads to minor slowdown vs inline asm. best we can do if stuck with MSVC
+    unsigned char carry = _addcarry_u64(0, N, D, &N);
+    if (!carry)
+        N = E;
+    _addcarry_u64(carry, C, 0, &C);
+    carry = _addcarry_u64(0, N, D, &N);
+    _addcarry_u64(carry, C, 0, &C);
     return C;
 #else
 #error UNSUPPORTED
