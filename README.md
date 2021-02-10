@@ -10,6 +10,8 @@ Because the implementation is completely free of any branches or memory accesses
 
 For denominators known at compile-time, there's no need to use this library. Just express the division directly in C/C++ and let the compiler handle it, as it can generate quite optimal codegen for that case. This utility is intended for run-time divisions.
 
+Supports Clang, GCC, and MSVC.
+
 #### Theory: ####
 
 First, `floor(2^64/D)` is computed with extreme care to efficiency. The first correct result bit is obtained via leading zero counts, the second via shifts, then subsequently the correct bit count is doubled by each of 5 Newton-Raphson iterations to obtain 64 correct bits. Careful construction avoids excessive shifts, branching, or the need to track more than 64 bits at a time during this process.
