@@ -14,6 +14,8 @@ First, `floor(2^64/D)` is computed with extreme care to efficiency. The first co
 
 Then, a multiply-high of this value with any desired numerator produces either the correct answer, or 1 below. This condition is checked and fixed, and the result is returned.
 
+In some cases intermediate fixup of the value `floor(2^64/D)` is skipped, causing the final answer to be either correct, 1 below, or 2 below, when this condition can be fixed more efficiently than separately fixing both the intermediate and final answer.
+
 The result of division by 0 is undefined.
 
 #### Example usage: ####
