@@ -4,12 +4,13 @@
 *    kareem.h.omar@gmail.com
 *    https://github.com/komrad36
 *
-*    Last updated Feb 9, 2021
+*    Last updated Feb 10, 2021
 *******************************************************************/
 
 #pragma once
 
 #include <cstdint>
+#include <immintrin.h>
 
 #if !defined(__clang__) && !defined(__GNUC__)
 #ifdef _MSC_VER
@@ -24,18 +25,15 @@
 class FastDivider
 {
 private:
-    static inline uint64_t Magic64(uint64_t D)
+    static inline uint64_t Magic64(uint64_t C, uint64_t D)
     {
 #if defined(__clang__) || defined(__GNUC__)
-        uint64_t A, E, F;
+        uint64_t E = C, F;
         asm("\
-    lzcnt %[C], %[A]           \n\
-    neg %[C]                   \n\
-    shlx %[A], %[C], %[E]      \n\
-    mov %[A], %[D]             \n\
     neg %b[A]                  \n\
-    cmovz %[A], %[E]           \n\
-    shrx %[A], %[E], %[A]      \n\
+    shlx %[D], %[C], %[E]      \n\
+    shrx %[A], %[E], %[E]      \n\
+    cmovnz %[E], %[A]          \n\
     bts %[D], %[A]             \n\
     mov %[A], %[E]             \n\
     imul %[C], %[A]            \n\
@@ -62,19 +60,17 @@ private:
     add %[C], %[E]             \n\
     adc $0, %[A]               \n\
     sbb $0, %[A]"
-            : [C] "+&c" (D), [A] "=&a" (A), [D] "=&d" (E), [E] "=&r" (F)
+            : [C] "+&c" (D), [A] "+&a" (C), [D] "+&d" (E), [E] "=&r" (F)
             :
             : "cc"
         );
-        return A;
+        return C;
 #elif defined(_MSC_VER)
-        uint64_t C = _lzcnt_u64(D);
-        D = (uint64_t)-(int64_t)D;
-        uint64_t E = D << C;
         uint64_t F = C;
         C = (uint64_t)-(int64_t)C;
-        E = !C ? C : E;
-        C = E >> C;
+        uint64_t E = D << F;
+        E >>= C;
+        C = C ? E : C;
         C |= 1ULL << F;
         C += __umulh(C, C * D);
         C += __umulh(C, C * D);
@@ -91,7 +87,7 @@ private:
 #endif
     }
 
-    static inline uint64_t MagicDiv64(uint64_t N, uint64_t D, uint64_t magic)
+    static inline uint64_t MagicDiv64(uint64_t N, uint64_t D, uint64_t M)
     {
 #if defined(__clang__) || defined(__GNUC__)
         uint64_t E;
@@ -99,26 +95,26 @@ private:
     mul %[N]                   \n\
     mov %[rdx], %[A]           \n\
     imul %[D], %[rdx]          \n\
-    sub %[rdx], %[N]           \n\
-    cmp %[D], %[N]             \n\
-    sbb $-1, %[A]"
-            : [N] "+&r" (N), [A] "+&a" (magic), [rdx] "=&d" (E)
+    add %[rdx], %[N]           \n\
+    add %[D], %[N]             \n\
+    adc $0, %[A]"
+            : [N] "+&r" (N), [A] "+&a" (M), [rdx] "=&d" (E)
             : [D] "r" (D)
             : "cc"
         );
-        return magic;
+        return M;
 #elif defined(_MSC_VER)
-        magic = __umulh(magic, N);
-        unsigned char carry = _subborrow_u64(0, N - magic * D, D, &N);
-        _subborrow_u64(carry, magic, ~0ULL, &magic);
-        return magic;
+        M = __umulh(M, N);
+        unsigned char carry = _addcarry_u64(0, N + M * D, D, &N);
+        _addcarry_u64(carry, M, 0, &M);
+        return M;
 #else
 #error UNSUPPORTED
 #endif
     }
 
 public:
-    inline FastDivider(uint64_t divisor) : m_D(divisor), m_M(Magic64(divisor)) {}
+    inline FastDivider(uint64_t divisor) : m_D((uint64_t)-(int64_t)divisor), m_M(Magic64(_lzcnt_u64(divisor), m_D)) {}
 
     inline uint64_t GetDivisor() const { return m_D; }
     inline uint64_t Divide(uint64_t N) const { return MagicDiv64(N, m_D, m_M); }
@@ -137,11 +133,11 @@ static inline uint64_t FastDivide(uint64_t N, uint64_t D)
     asm("\
     lzcnt %[D], %[A]           \n\
     neg %[D]                   \n\
-    shlx %[A], %[D], %[E]      \n\
     mov %[A], %[F]             \n\
     neg %b[A]                  \n\
-    cmovz %[A], %[E]           \n\
-    shrx %[A], %[E], %[A]      \n\
+    shlx %[F], %[D], %[E]      \n\
+    shrx %[A], %[E], %[E]      \n\
+    cmovnz %[E], %[A]          \n\
     bts %[F], %[A]             \n\
     mov %[D], %[E]             \n\
     mov %[A], %[F]             \n\
@@ -183,11 +179,11 @@ static inline uint64_t FastDivide(uint64_t N, uint64_t D)
 #elif defined(_MSC_VER)
     uint64_t C = _lzcnt_u64(D);
     D = (uint64_t)-(int64_t)D;
-    uint64_t E = D << C;
     uint64_t F = C;
     C = (uint64_t)-(int64_t)C;
-    E = !C ? C : E;
-    C = E >> C;
+    uint64_t E = D << F;
+    E >>= C;
+    C = C ? E : C;
     C |= 1ULL << F;
     C += __umulh(C, C * D);
     C += __umulh(C, C * D);
