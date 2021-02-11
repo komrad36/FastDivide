@@ -2,6 +2,8 @@
 
 ### It probably shouldn't be possible to divide (or modulo) two 64-bit unsigned integers on x86 faster than the hardware `div` instruction, but, it is. About 30% faster. ###
 
+At least on Intel, where `div` is crazy slow.
+
 Technically the hardware `div` instruction divides a 128-bit numerator by a 64-bit denominator, but there's no reason it couldn't check for empty high bits or have a 64-bit version. What's worse, the 128-bit capability is very rarely used, because if the result doesn't fit in 64 bits, it explodes with a hardware exception! (Instead of, say, returning a truncated result and setting some flags, like most arithmetic instructions.)
 
 Because the implementation is completely free of any branches or memory accesses, it also doesn't leak any side-channel information about its arguments (at least, not via timing or memory!), so it could be useful for crypto applications while actually improving performance.
