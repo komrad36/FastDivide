@@ -58,7 +58,7 @@ Precompute for a given divisor and then perform multiple fast divisions, modulos
     std::cout << divider.Modulo(N3) << std::endl;
     
     uint64_t rem1, rem2, rem3;
-    uint64_t div1 = FastDivMod(N1, D1, rem1);
-    uint64_t div2 = FastDivMod(N2, D2, rem2);
-    uint64_t div3 = FastDivMod(N3, D3, rem3);
+    uint64_t div1 = divider.DivMod(N1, rem1);
+    uint64_t div2 = divider.DivMod(N2, rem2);
+    uint64_t div3 = divider.DivMod(N3, rem3);
 ```
