@@ -16,6 +16,8 @@ If you need to divide/modulo by the same divisor a *HUGE* number of times, it is
 
 Supports Clang, GCC, and MSVC.
 
+This library is for 64-bit integers. For fast 128-bit division, see https://github.com/komrad36/FastDivide128.
+
 #### Theory: ####
 
 First, `floor(2^64/D)` is computed with extreme care to efficiency. The first correct result bit is obtained via leading zero counts, the second via shifts, then subsequently the correct bit count is doubled by each of 5 Newton-Raphson iterations to obtain 64 correct bits. Careful construction avoids excessive shifts, branching, or the need to track more than 64 bits at a time during this process.
