@@ -122,7 +122,7 @@ private:
     add %[rdx], %[N]           \n\
     mov %[N], %[A]             \n\
     add %[D], %[N]             \n\
-    cmovc %[D], %[A]"
+    cmovc %[N], %[A]"
             : [N] "+&r" (N), [A] "+&a" (M), [rdx] "=&d" (E)
             : [D] "r" (D)
             : "cc"
