@@ -8,6 +8,8 @@ Technically the hardware `div` instruction divides a 128-bit numerator by a 64-b
 
 Because the implementation is completely free of any branches or memory accesses, it also doesn't leak any side-channel information about its arguments (at least, not via timing or memory!), so it could be useful for crypto applications while actually improving performance.
 
+Because this implementation uses more registers than a single hardware div, test your particular use case to see whether it's a net win. If you need to spill a bunch of regs to use it, it may not be worth it.
+
 For denominators known at compile-time, there's no need to use this library. Just express the division/modulo directly in C/C++ and let the compiler handle it, as it can generate quite optimal codegen for that case.
 
 Because a lot of the work is precomputable for a given denominator/divisor, a class is also provided allowing you to perform this precomputation, then repeatedly divide (or modulo) different numerators by that same denominator.
