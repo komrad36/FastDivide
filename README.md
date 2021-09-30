@@ -33,24 +33,24 @@ The result of division/modulo by 0 is undefined.
 #### Example usage: ####
 
 Divide two arbitrary 64-bit integers, producing a 64-bit result, faster than hardware:
-```
+```cpp
     std::cout << FastDivide(N, D) << std::endl;
 ```
 
 Modulo (remainder after division) two arbitrary 64-bit integers, producing a 64-bit result, faster than hardware:
-```
+```cpp
     std::cout << FastModulo(N, D) << std::endl;
 ```
 
 Compute division and modulo simultaneously for two arbitrary 64-bit integers, producing 64-bit results, faster than hardware:
-```
+```cpp
     uint64_t rem;
     uint64_t div = FastDivMod(N, D, rem);
     std::cout << div << ", " << rem << std::endl;
 ```
 
 Precompute for a given divisor and then perform multiple fast divisions, modulos, or both simultaneously:
-```
+```cpp
     FastDivider divider(D);
     
     std::cout << divider.Divide(N1) << std::endl;
